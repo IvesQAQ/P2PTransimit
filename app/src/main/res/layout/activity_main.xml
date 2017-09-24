@@ -13,21 +13,20 @@ tools:context="god.p2ptestproj.MainActivity">
     android:text="Wi-Fi Direct Scaning..."
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginTop="28dp"
+    android:id="@+id/textView"
     android:layout_alignParentTop="true"
     android:layout_centerHorizontal="true"
-    android:id="@+id/textView" />
+    android:layout_marginTop="22dp" />
 <NumberPicker
     android:id="@+id/pick"
     android:focusableInTouchMode="true"
     android:focusable="true"
     android:layout_width="200dp"
     android:layout_height="50dp"
-    android:layout_marginTop="45dp"
     android:layout_below="@+id/text"
     android:layout_centerHorizontal="true" />
 <TextView
-    android:text="helllo"
+    android:text="hello"
     android:id="@+id/text"
     android:visibility="invisible"
     android:layout_width="wrap_content"
@@ -37,21 +36,33 @@ tools:context="god.p2ptestproj.MainActivity">
     android:layout_marginTop="15dp" />
 
     <EditText
-        android:id="@+id/sendText"
+        android:id="@+id/ipEdit"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:text="test message"
+        android:text="IP address"
         android:layout_weight="100"
-        android:layout_alignBottom="@+id/sendButton"
+        android:layout_above="@+id/sendButton"
         android:layout_alignParentStart="true"
         android:layout_toStartOf="@+id/sendButton" />
+
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/sendButton"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/sendButton"
+        android:layout_weight="100"
+        android:text="test message" />
+
     <Button
         android:id="@+id/sendButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send"
         android:layout_below="@+id/connectButton"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true"
+        android:layout_alignStart="@+id/connectButton" />
 
     <Button
         android:id="@+id/connectButton"
@@ -59,14 +70,13 @@ tools:context="god.p2ptestproj.MainActivity">
         android:layout_height="wrap_content"
         android:text="Connect!"
         android:layout_below="@+id/pick"
-        android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true" />
 
     <TextView
         android:id="@+id/peerInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
-        android:layout_below="@+id/sendText"
+        android:text="Chat"
+        android:layout_below="@+id/editText"
         android:layout_alignParentStart="true" />
 </RelativeLayout>
