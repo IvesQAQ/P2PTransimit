@@ -30,15 +30,14 @@ public class SocketServer {
      *
      * @param port input port
      */
+
     public SocketServer(int port) {
         try {
             server = new ServerSocket(port);
-//            isClint = true;
         } catch (IOException e) {
             e.printStackTrace();
             Log.i(TAG, "initialize port error");
         }
-
     }
 
     public void startListen() {
@@ -55,13 +54,16 @@ public class SocketServer {
                         while (!socket.isClosed()) {
                             //change string code format
                             byte[] bt = new byte[50];
-                            in.read(bt);
-                            str = new String(bt, "UTF-8");
+                            try{
+                                in.read(bt);
+                                str = new String(bt, "UTF-8");
+                            }catch(Exception e){
+
+                            }
                             //return receiver message to main screen
                             if (!str.equals("")&&str!=null) {
                                 returnMessage(str);
                             }
-
                             //TODO receiver Toast should delete while test is done
 //                            Toast.makeText(, "Receive Message: " + str, Toast.LENGTH_LONG).show();
                         }
@@ -91,6 +93,8 @@ public class SocketServer {
                 } catch (IOException e) {
                     e.printStackTrace();
                     Log.i(TAG, "Send Message IOError");
+                }catch(Exception ee){
+
                 }
             }
         }).start();

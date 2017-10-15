@@ -42,14 +42,14 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
     NumberPicker picker;
     TextView textView, peerInfo, ownInfo;
     Button sendBut, connBut;
-    EditText textEditer, ipEditer;
+    EditText textEditer;
     private final String TAG = "MainActivity";
     private List<WifiP2pDevice> peers = new ArrayList<>();
     private String[] peersName;
     //receiver is create to receiver the broadcast information
 
     //build Server socket
-    private SocketServer server = new SocketServer(6666);
+    private SocketServer server;
     private SocketClient client;
     private boolean isClient = false;
 
@@ -59,6 +59,7 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
             String action = intent.getAction();
             switch (action) {
                 case WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION:
+                    //表明Wi-Fi对等网络（P2P）是否已经启用
                     int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                     if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
                         Log.d(TAG, "WIFI_P2P is able to use");
@@ -67,6 +68,7 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
                     }
                     break;
                 case WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION:
+                    //表明可用的对等点的列表发生了改变
                     Log.d(TAG, "WIFI_P2P_PEERS_CHANGED_ACTION");
                     if (mManager != null) {
                         mManager.requestPeers(mChannel, MainActivity.this);
@@ -74,7 +76,8 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
                     Log.d(TAG, "P2P peers changed");
                     break;
                 case WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION:
-
+                    //表示Wi-Fi对等网络的连接状态发生了改变
+                    //也可能表示连接成功
                     Log.d(TAG, "WIFI_P2P_CONNECTION_CHANGED_ACTION");
                     if (mManager == null) {
                         return;
@@ -84,12 +87,26 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
 
                     if (networkInfo.isConnected()) {
                         mManager.requestConnectionInfo(mChannel, MainActivity.this);
+                        Log.i(TAG,"已经连接");
+                    }else{
+                        Log.i(TAG,"断开连接");
                     }
                     break;
                 case WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION:
+                    //表示该设备的配置信息发生了改变
                     Log.d(TAG, "WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
                     break;
-            }
+                case WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION:
+
+                    int State = intent.getIntExtra(WifiP2pManager.EXTRA_DISCOVERY_STATE, -1);
+
+                    if (State == WifiP2pManager.WIFI_P2P_DISCOVERY_STARTED)
+                        Toast.makeText(MainActivity.this, "搜索开启", Toast.LENGTH_SHORT).show();
+                    else if (State == WifiP2pManager.WIFI_P2P_DISCOVERY_STOPPED)
+                        Toast.makeText(MainActivity.this, "搜索已关闭", Toast.LENGTH_SHORT).show();
+
+                }
+
         }
     };
 
@@ -120,13 +137,10 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
         sendBut.setOnClickListener(this);
         connBut.setOnClickListener(this);
         textEditer = (EditText) findViewById(R.id.editText);
-        ipEditer = (EditText) findViewById(R.id.ipEdit);
 
         textView = (TextView) findViewById(R.id.text);
         peerInfo = (TextView) findViewById(R.id.peerInfo);
         ownInfo = (TextView) findViewById(R.id.textView);
-
-        server.startListen();
 
         SocketClient.mHandler = new android.os.Handler() {
             @Override
@@ -144,8 +158,8 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
             }
         };
 
-        ownInfo.append("\nIP: "+this.getLocalIpAddress());
-        ownInfo.append("\nMAC: "+this.getLocalMacAddress());
+        ownInfo.append("\nIP: " + this.getLocalIpAddress());
+        ownInfo.append("\nMAC: " + this.getLocalMacAddress());
 
     }
 
@@ -172,13 +186,10 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
                 break;
             case R.id.connectButton:
                 try {
-                    isClient = true;
+                    connect(picker.getValue());
                     //String ip = connect(picker.getValue());
-                    String ip = ipEditer.getEditableText().toString();
-                    client = new SocketClient(MainActivity.this, ip, 6666);
-                    client.startClientThread();
-                    sendBut.setEnabled(true);
-                    Toast.makeText(this,"Success Connect!",Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(this, "Success Connect!", Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
                     Log.d(TAG, e.toString());
                 }
@@ -197,12 +208,12 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
 
             @Override
             public void onSuccess() {
-                Log.d(TAG, "onSuccess");
+                Log.d(TAG, "discoverPeers onSuccess");
             }
 
             @Override
             public void onFailure(int reasonCode) {
-                Log.d(TAG, "onFailure");
+                Log.d(TAG, "discoverPeers onFailure");
             }
         });
 
@@ -250,7 +261,8 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
-
+        config.groupOwnerIntent = 15; // I want this device to become the owner
+        Log.i(TAG, "Start CONNECTONIONOIANSDOINAOSIDNOIASDNOIDNSAOINSDOIAN"+config.groupOwnerIntent);
         mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
             @Override
             public void onSuccess() {
@@ -265,21 +277,44 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
                 Log.d(TAG, "connect fail");
             }
         });
+        Log.i(TAG, "END CONNECTONIONOIANSDOINAOSIDNOIASDNOIDNSAOINSDOIAN");
+
         return device.deviceAddress;
     }
 
     @Override
     public void onConnectionInfoAvailable(WifiP2pInfo info) {
+        // 这里可以查看变化后的网络信息
+        // 通过传递进来的WifiP2pInfo参数获取变化后的地址信息
         textView.setVisibility(View.VISIBLE);
         textView.setText("(connected)");
         // InetAddress from WifiP2pInfo struct.
         InetAddress groupOwnerAddress = info.groupOwnerAddress;
+        peerInfo.append("\ngroup Owner ip: " + groupOwnerAddress.getHostAddress());
+        // 通过协商，决定一个小组的组长
+
+
         Log.d(TAG, "onConnectionInfoAvailable");
         Log.d(TAG, info.toString());
         if (info.groupFormed && info.isGroupOwner) {
+            Log.d(TAG, "我是群主");
+            // 这里执行P2P小组组长的任务。
+            // 通常是创建一个服务线程来监听客户端的请求
+            isClient = false;
+            if(server==null){
+                server = new SocketServer(6666);
+                server.startListen();
+            }
+            sendBut.setEnabled(true);
 
         } else if (info.groupFormed) {
-
+            Log.d(TAG, "我是客户端");
+            // 这里执行普通组员的任务
+            // 通常是创建一个客户端向组长的服务器发送请求
+            client = new SocketClient(MainActivity.this, groupOwnerAddress.getHostAddress(), 6666);
+            client.startClientThread();
+            sendBut.setEnabled(true);
+            isClient = true;
         }
     }
 
@@ -304,5 +339,6 @@ public class MainActivity extends Activity implements WifiP2pManager.PeerListLis
         WifiInfo info = wifi.getConnectionInfo();
         return info.getMacAddress();
     }
+
 
 }
